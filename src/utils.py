@@ -92,16 +92,17 @@ class EquidistantInterpolator(BaseEstimator):
 
     def transform(self, X, y=None):
         
+        # Sort the wavelength vector
         sort_idx = np.argsort(self.lambda_nm).astype(int)
         lambda_nm = self.lambda_nm[sort_idx]
-        print(lambda_nm)
-        min_nm = np.min(lambda_nm)
+        min_nm = np.min(lambda_nm) # Grab the min and max wavelength
         max_nm = np.max(lambda_nm)
+        # Set up an equidistant sampling space
         equi_nm = np.linspace(start=min_nm, stop=max_nm, num=len(lambda_nm))
         self.equidistant_lambda_nm = equi_nm
-
         X = X[:, sort_idx]
-
+        
+        # Reinterpolate the array
         self.transformed_X = np.array(
             [
                 np.interp(
@@ -111,7 +112,7 @@ class EquidistantInterpolator(BaseEstimator):
                 ) for row in X
             ]
         )
-        
+
         return self.transformed_X
 
     def fit_transform(self, X, y=None):
@@ -169,4 +170,13 @@ def validate_args(args: argparse.Namespace):
         raise ValueError()
     elif args.format.lower() not in ['wavelength', 'wavenumber']:
         raise ValueError()
+
+    # 'sample-size'
+    if 'sample_size' not in args:
+        raise ValueError("A numeric value must be passed to '--sample-size'.")
+    elif not isinstance(args.sample_size, (float, int)):
+        raise ValueError(f"'--sample-size' must be either a 'float' or an 'int'.")
+    elif args.sample_size < 0:
+        raise ValueError("'--sample-size' must be greater than 0.")
+    
     return True
